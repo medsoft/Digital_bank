@@ -1,5 +1,9 @@
 package com.medsoft.digital_bank;
 
+import com.medsoft.digital_bank.Dtos.BankAccountDTO;
+import com.medsoft.digital_bank.Dtos.CurrentBankAccountDTO;
+import com.medsoft.digital_bank.Dtos.CustomerDTO;
+import com.medsoft.digital_bank.Dtos.SavingBankAccountDTO;
 import com.medsoft.digital_bank.entities.AccountOperation;
 import com.medsoft.digital_bank.entities.CurrentAccount;
 import com.medsoft.digital_bank.entities.Customer;
@@ -17,6 +21,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -34,36 +39,42 @@ public class DigitalBankApplication {
         SpringApplication.run(DigitalBankApplication.class, args);
     }
 
-    //@Bean
+    @Bean
     CommandLineRunner commandLineRunner(BankAccountService bankAccountService) {
         return args -> {
             Stream.of("Ahmad", "Abass", "Ibrahim", "Khadija").forEach(name -> {
 
-                Customer customer =  new Customer() ;
-                bankAccountService.saveCustomer(customer) ;
-                customer.setName(name);
-                customer.setEmail(name+"@gmail.com");
-                bankAccountService.saveCustomer(customer) ;
+                CustomerDTO customerDTO =  new CustomerDTO() ;
+                customerDTO.setName(name);
+                customerDTO.setEmail(name+"@gmail.com");
+                bankAccountService.saveCustomer(customerDTO) ;
             });
                 bankAccountService.listCustomers().forEach(customer -> {
+
                 bankAccountService.saveCurrentBankAccount(Math.random()*9000, customer.getId(), 5000);
                 bankAccountService.saveSavingBankAccount(Math.random()*9000, customer.getId(), 3.5);
 
-                bankAccountService.bankAccountList().forEach(account -> {
-
-                    for (int i = 0; i < 4 ; i++) {
-
-                        bankAccountService.credit(account.getId() ,  10000+Math.random()*500 ,"Compte Credité");
-                        bankAccountService.debit(account.getId() , Math.random()*1000, "Compte débité");
-                    }
-                });
-
             });
+            List<BankAccountDTO> bankAccounts  =  bankAccountService.listBankAccount()  ;
 
+                for (BankAccountDTO bankAccount : bankAccounts) {
+
+                    for (int i = 0; i < 5 ; i++) {
+                        String accountId ;
+                        if (bankAccount instanceof SavingBankAccountDTO){
+                            accountId = ((SavingBankAccountDTO) bankAccount).getId() ;
+                        }else {
+                            accountId = ((CurrentBankAccountDTO) bankAccount).getId() ;
+                        }
+                        bankAccountService.credit(accountId,  10000+Math.random()*500 ,"Compte Credité");
+                        bankAccountService.debit(accountId, Math.random()*1000, "Compte débité");
+                    }
+                }
         };
+
     }
 
-    //@Bean
+    /*
     CommandLineRunner start(CustomerRepository customerRepository ,
                             BankAccountRepository bankAccountRepository,
                             AccountOperationRepository accountOperationRepository) {
@@ -120,4 +131,5 @@ public class DigitalBankApplication {
 
     }
 
+     */
 }
